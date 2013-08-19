@@ -1,11 +1,14 @@
 OASISFormat: 0.3
 Name:        Joolog
-Version:     0.1
+Version:     0.3
 Synopsis:    Logger for js_of_ocaml
+Description:
+  Joolog (Js_of_ocaml logger) is a library managing logs for
+  application running in the browser.
 Authors:     Hugo Heuzard
 License:     LGPL-2.1 with OCaml linking exception
 Plugins:     META (0.3)
-
+Homepage: https://github.com/hhugo/joolog
 Library joolog
   Path:       ./
   BuildTools: ocamlbuild
