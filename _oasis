@@ -1,0 +1,23 @@
+OASISFormat: 0.3
+Name:        Joolog
+Version:     0.1
+Synopsis:    Logger for js_of_ocaml
+Authors:     Hugo Heuzard
+License:     LGPL-2.1 with OCaml linking exception
+Plugins:     META (0.3)
+
+Library joolog
+  Path:       ./
+  BuildTools: ocamlbuild
+  Modules:    Joolog
+  BuildDepends: lwt.log, lwt.react, js_of_ocaml, lwt.syntax,js_of_ocaml.syntax
+  Install: true
+  CompiledObject: byte
+
+Executable test
+  Path: exemple
+  MainIs: main.ml
+  BuildTools: ocamlbuild
+  BuildDepends: joolog, lwt.log, lwt.react, js_of_ocaml, js_of_ocaml.syntax
+  Install: false
+  CompiledObject: byte

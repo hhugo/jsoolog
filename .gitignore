@@ -2,3 +2,7 @@
 *.js
 _build
 *~
+*#*
+myocamlbuild.ml
+setup.data
+setup.ml
