@@ -1,13 +1,5 @@
-open Lwt_log_core
+include Lwt_log_core
 module D = Dom
-
-let error = error_f
-let fatal = fatal_f
-let warning = warning_f
-let notive = notice_f
-let info = info_f
-let debug = debug_f
-
 
 let default_handler : (Js.js_string Js.t -> Js.js_string Js.t -> int -> bool Js.t) option ref = ref
     (Some (fun msg url line ->
@@ -20,6 +12,9 @@ let _ = (Obj.magic Dom_html.window)##onerror <- Js.wrap_callback (fun msg url li
     match ! default_handler with
       | None -> Js._false
       | Some h -> h msg url line)
+
+
+let set_logger l = Lwt_log_core.default := l
 
 
 module Console = struct
@@ -51,6 +46,8 @@ module History = struct
     next : string list
   }
 
+  let empty = {current = None; prev = [] ; next = []}
+
   let cons_opt opt l = match opt with
     | None -> l
     | Some x -> x::l
@@ -69,6 +66,8 @@ module History = struct
         {current=Some x;prev=xs;next= match current with
              | None | Some "" -> next
              | Some c ->  c :: next}
+
+  let current t = t.current
 
   let down t =
     match t with
@@ -95,8 +94,7 @@ module Dom = struct
 
   let xhtml_of_log (k,s) =
     let span = Dom_html.createSpan Dom_html.document in
-    span##style##fontWeight <- Js.string "bold";
-    span##style##color <- Js.string (color_of_kind k);
+    span##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level k));
     span##innerHTML <- (Js.string (Printf.sprintf "[%s]" (String.capitalize (string_of_level k))));
 
     let a = Dom_html.createA Dom_html.document in
@@ -116,6 +114,7 @@ module Dom = struct
 
   let make () =
     let dom = Dom_html.createUl Dom_html.document in
+    dom##className <- Js.string "joolog_listing";
     {
       last_s = "";
       last_n = 1;
@@ -129,6 +128,8 @@ module Dom = struct
   let removeSelf node =
     let node = (node :> D.node Js.t) in
     Js.Opt.iter (node##parentNode) (fun p -> ignore(p##removeChild(node)) )
+
+  let dom t = t.dom
 
   let logger t = Lwt_log_core.make
       ~close:(fun _ -> Lwt.return_unit)
@@ -160,6 +161,7 @@ module DomExt = struct
   type t = {
     base : Dom.t;
     dom : Dom_html.divElement Js.t;
+    onlog : (Lwt_log_core.section -> Lwt_log_core.level -> string list -> unit);
     mutable history : History.t;
     mutable parsers : (string -> unit Lwt.t) list;
   }
@@ -173,7 +175,21 @@ module DomExt = struct
   let add_command_handler t f =
     t.parsers <- f :: t.parsers
 
-  let make ?opened () =
+  let dom t = t.dom
+
+  let make ?(opened=true) () =
+
+    let new_log,send_new_log = React.E.create () in
+
+    let state = {
+      base = Dom.make ();
+      dom = Dom_html.createDiv Dom_html.document;
+      onlog = (fun _ level _ -> send_new_log level);
+      history = History.empty;
+      parsers = [];
+    }
+    in
+    (* unseen using react *)
     let unseen,set_unseen = React.S.create (0,0) in
     let shown,set_shown = React.S.create false in
     let toread = React.S.l2 (fun (w,e) b ->
@@ -181,9 +197,7 @@ module DomExt = struct
         then 0,0
         else w,e) unseen shown in
 
-    let new_log,send_new_log = React.E.create () in
-
-    let _ = React.S.sample (fun k b ->
+    ignore(React.S.sample (fun k b ->
         match b,k with
           | false,Error ->
             Lwt.async (fun () ->
@@ -194,112 +208,113 @@ module DomExt = struct
                 let w,e = React.S.value unseen in
                 set_unseen (succ w,e); Lwt.return_unit)
           | _,_ -> ()
-      ) new_log shown in
+      ) new_log shown);
 
-    let _ = React.S.map (function
+    ignore(React.S.map (function
         | true -> Lwt.async (fun () -> set_unseen (0,0);Lwt.return_unit)
-        | _ -> ()) shown in
-
+        | _ -> ()) shown);
 
     (* Command handlers *)
-
-  let input_box =
-    let x = Dom_html.createInput Dom_html.document in
-    (* x##_type <- Js.string "text"; *)
-    x##placeholder <- Js.string "CMD";
-    x##id <- Js.string "search_input";
-    x
-
-  let parse s =
-    history_add s;
-    let rec loop = function
-      | [] -> Lwt.return_unit
-      | f::fs ->
-        try_lwt f s with _ -> loop fs
-    in Lwt.async (fun () ->
-        lwt () = loop !parsers in
-        input_box##value <- Js.string "" ;
-        Lwt.return_unit)
-
-
-  let debug_container =
-    let dom_hide =
-      let x = Dom_html.createA Dom_html.document in
-      x##onclick <- Dom_html.handler (fun _ -> set_shown false; Js._true);
-      x##innerHTML <- Js.string "Hide";
-      x in
-    let dom_clear =
-      let x = Dom_html.createA Dom_html.document in
-      x##onclick <- Dom_html.handler (fun _ -> Dom.clear (); Js._true);
-      x##innerHTML <- Js.string "Clear";
+    add_command_handler state (fun s -> error_f "cmd not found : %s" s);
+    let input_box =
+      let x = Dom_html.createInput Dom_html.document in
+      (* x##_type <- Js.string "text"; *)
+      x##placeholder <- Js.string "CMD";
+      x##className <- Js.string "joolog_search_input";
       x in
 
-    let dom_div = Dom_html.createDiv Dom_html.document in
+    let parse s =
+      state.history <- History.add state.history s;
+      let rec loop = function
+        | [] -> Lwt.return_unit
+        | f::fs ->
+          try_lwt f s with _ -> loop fs
+      in Lwt.async (fun () ->
+          lwt () = loop state.parsers in
+          input_box##value <- Js.string "" ;
+          Lwt.return_unit) in
 
-    D.appendChild dom_div dom_hide;
-    D.appendChild dom_div dom_clear;
-    D.appendChild dom_div Dom.dom;
-    D.appendChild dom_div input_box;
-
-    display_block dom_div (React.S.map (not) shown);
-    dom_div
-
-  let debug_button =
-    let title_dom = Dom_html.createA Dom_html.document in
-    let _ = React.S.map (function
-        | 0,0 ->
-          title_dom##innerHTML <- Js.string "Debug";
-          title_dom##style##color <- Js.string "black"
-        | w,0 ->
-          title_dom##innerHTML <- Js.string  (Printf.sprintf "Debug:%dw" w);
-          title_dom##style##color <- Js.string "yellow"
-        | w,e ->
-          title_dom##innerHTML <- Js.string  (Printf.sprintf "Debug:%dw,%de" w e);
-          title_dom##style##color <- Js.string "red"
-      ) toread in
-
-    title_dom##onclick <- Dom_html.handler (fun _ -> set_shown true; Js._true);
-
-    let div = Dom_html.createDiv Dom_html.document in
-    D.appendChild div title_dom;
-    display_block div shown;
-    div
-
-  let _ = add_command_handler (fun s -> error_f "cmd not found : %s" s)
-
-  let logger t = Lwt_log_core.make
-      ~close:(fun _ -> Lwt.return_unit)
-      ~output:(fun section level logs -> send_new_log level; Lwt.return_unit)
-
-  let logger = broadcast [logger;Dom.logger]
-
-  let dom =
-    let dom_div = Dom_html.createDiv Dom_html.document in
-    D.appendChild dom_div debug_container;
-    D.appendChild dom_div debug_button;
-    dom_div
-
-  let init ?(opened=false) () =
     ignore (input_box##onkeyup <- Dom_html.handler (fun e ->
         if e##keyCode == Keycode.return
         then parse (Js.to_string (input_box##value))
         else if e##keyCode == Keycode.up
-        then match history_up () with
-          | None -> ()
-          | Some x -> input_box##value <- Js.string x
+        then
+          begin
+            state.history <- History.up state.history;
+            match History.current state.history with
+              | None -> ()
+              | Some x -> input_box##value <- Js.string x
+          end
         else if e##keyCode == Keycode.down
-        then match history_down () with
-          | None -> ()
-          | Some x -> input_box##value <- Js.string x
+        then
+          begin
+            state.history <- History.down state.history;
+            match History.current state.history with
+              | None -> ()
+              | Some x -> input_box##value <- Js.string x
+          end
         else ();
         Js._false));
-    D.appendChild Dom_html.document##body dom;
-    set_shown opened
+
+    let debug_container =
+      let dom_hide =
+        let x = Dom_html.createA Dom_html.document in
+        x##onclick <- Dom_html.handler (fun _ -> set_shown false; Js._true);
+        x##className <- Js.string "joolog_act_hide";
+        x in
+      let dom_clear =
+        let x = Dom_html.createA Dom_html.document in
+        x##onclick <- Dom_html.handler (fun _ -> Dom.clear state.base; Js._true);
+        x##className <- Js.string "joolog_act_clear";
+        x in
+
+      let div = Dom_html.createDiv Dom_html.document in
+
+      D.appendChild div dom_hide;
+      D.appendChild div dom_clear;
+      D.appendChild div (Dom.dom state.base);
+      D.appendChild div input_box;
+      div##className <- Js.string "joolog_view_long";
+      display_block div (React.S.map (not) shown);
+      div in
+
+    let debug_button =
+      let title_dom = Dom_html.createA Dom_html.document in
+      let _ = React.S.map (function
+          | 0,0 ->
+            title_dom##innerHTML <- Js.string "";
+            title_dom##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level Lwt_log_core.Info));
+          | w,0 ->
+            title_dom##innerHTML <- Js.string  (Printf.sprintf "%dw" w);
+            title_dom##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level Lwt_log_core.Warning));
+          | w,e ->
+            title_dom##innerHTML <- Js.string  (Printf.sprintf "%dw,%de" w e);
+            title_dom##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level Lwt_log_core.Error));
+        ) toread in
+
+      title_dom##onclick <- Dom_html.handler (fun _ -> set_shown true; Js._true);
+
+      let div = Dom_html.createDiv Dom_html.document in
+      D.appendChild div title_dom;
+      div##className <- Js.string "joolog_view_short";
+      display_block div shown;
+      div
+    in
+
+    D.appendChild state.dom debug_container;
+    D.appendChild state.dom debug_button;
+    state.dom##className <- Js.string "joolog_root";
+
+    set_shown opened;
+
+    state
+
+  let logger t =
+    let logger =
+      Lwt_log_core.make
+        ~close:(fun _ -> Lwt.return_unit)
+        ~output:(fun section level logs -> t.onlog section level logs; Lwt.return_unit)
+    in
+    broadcast [logger;Dom.logger t.base]
 
 end
-
-
-let _ = Dom_html.window##onload <- Dom_html.handler (fun _ ->
-  DomExt.init ();
-  default:=broadcast [Console.logger;DomExt.logger];
-  Js._true)
