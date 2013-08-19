@@ -1,0 +1,3 @@
+<log.ml{,i}>:syntax(camlp4o),package(lwt.syntax,js_of_ocaml.syntax,react,js_of_ocaml)
+<log.byte>:package(js_of_ocaml,react,lwt.log)
+true:debug
