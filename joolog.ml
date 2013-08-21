@@ -224,15 +224,20 @@ module DomExt = struct
       x in
 
     let parse s =
-      state.history <- History.add state.history s;
-      let rec loop = function
-        | [] -> Lwt.return_unit
-        | f::fs ->
-          try_lwt f s with _ -> loop fs
-      in Lwt.async (fun () ->
-          lwt () = loop state.parsers in
-          input_box##value <- Js.string "" ;
-          Lwt.return_unit) in
+      if s = ""
+      then ()
+      else
+        begin
+          state.history <- History.add state.history s;
+          let rec loop = function
+            | [] -> Lwt.return_unit
+            | f::fs ->
+              try_lwt f s with _ -> loop fs
+          in Lwt.async (fun () ->
+              lwt () = loop state.parsers in
+              input_box##value <- Js.string "" ;
+              Lwt.return_unit)
+        end in
 
     ignore (input_box##onkeyup <- Dom_html.handler (fun e ->
         if e##keyCode == Keycode.return
