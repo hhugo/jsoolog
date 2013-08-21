@@ -14,7 +14,7 @@ lib: configure
 
 exemple:
 	ocaml setup.ml -build exemple/main.byte
-	js_of_ocaml _build/exemple/main.byte `ocamlfind query js_of_ocaml`/weak.js -noinline -pretty
+	js_of_ocaml _build/exemple/main.byte +weak.js -noinline -pretty
 
 clean:
 	ocaml setup.ml -clean
