@@ -1,3 +1,4 @@
+
 include Lwt_log_core
 module D = Dom
 
@@ -13,9 +14,7 @@ let _ = (Obj.magic Dom_html.window)##onerror <- Js.wrap_callback (fun msg url li
       | None -> Js._false
       | Some h -> h msg url line)
 
-
 let set_logger l = Lwt_log_core.default := l
-
 
 module Console = struct
   let logger = Lwt_log_core.make
@@ -35,7 +34,6 @@ module Console = struct
           );
           Lwt.return_unit
         )
-
 end
 
 module History = struct
@@ -84,17 +82,15 @@ module History = struct
 
 end
 
-module Dom = struct
+let base_name = "joolog"
+let classname s = Printf.ksprintf (fun s -> Js.string (Printf.sprintf "%s_%s" base_name s )) s
+let classname_k k = classname "level_%s" (Lwt_log_core.string_of_level k);
 
-  let color_of_kind = function
-    | Debug ->          "black"
-    | Error | Fatal ->  "red"
-    | Warning ->        "yellow"
-    | Info | Notice ->  "green"
+module SimpleDom = struct
 
   let xhtml_of_log (k,s) =
     let span = Dom_html.createSpan Dom_html.document in
-    span##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level k));
+    span##className <- classname_k k;
     span##innerHTML <- (Js.string (Printf.sprintf "[%s]" (String.capitalize (string_of_level k))));
 
     let a = Dom_html.createA Dom_html.document in
@@ -114,7 +110,7 @@ module Dom = struct
 
   let make () =
     let dom = Dom_html.createUl Dom_html.document in
-    dom##className <- Js.string "joolog_listing";
+    dom##className <- classname "ul";
     {
       last_s = "";
       last_n = 1;
@@ -156,10 +152,10 @@ module Dom = struct
 
 end
 
-module DomExt = struct
+module Dom = struct
 
   type t = {
-    base : Dom.t;
+    base : SimpleDom.t;
     dom : Dom_html.divElement Js.t;
     onlog : (Lwt_log_core.section -> Lwt_log_core.level -> string list -> unit);
     mutable history : History.t;
@@ -182,7 +178,7 @@ module DomExt = struct
     let new_log,send_new_log = React.E.create () in
 
     let state = {
-      base = Dom.make ();
+      base = SimpleDom.make ();
       dom = Dom_html.createDiv Dom_html.document;
       onlog = (fun _ level _ -> send_new_log level);
       history = History.empty;
@@ -220,7 +216,7 @@ module DomExt = struct
       let x = Dom_html.createInput Dom_html.document in
       (* x##_type <- Js.string "text"; *)
       x##placeholder <- Js.string "CMD";
-      x##className <- Js.string "joolog_search_input";
+      x##className <- classname "input";
       x in
 
     let parse s =
@@ -265,21 +261,21 @@ module DomExt = struct
       let dom_hide =
         let x = Dom_html.createA Dom_html.document in
         x##onclick <- Dom_html.handler (fun _ -> set_shown false; Js._true);
-        x##className <- Js.string "joolog_act_hide";
+        x##className <- classname "hide";
         x in
       let dom_clear =
         let x = Dom_html.createA Dom_html.document in
-        x##onclick <- Dom_html.handler (fun _ -> Dom.clear state.base; Js._true);
-        x##className <- Js.string "joolog_act_clear";
+        x##onclick <- Dom_html.handler (fun _ -> SimpleDom.clear state.base; Js._true);
+        x##className <- classname "clear";
         x in
 
       let div = Dom_html.createDiv Dom_html.document in
 
       D.appendChild div dom_hide;
       D.appendChild div dom_clear;
-      D.appendChild div (Dom.dom state.base);
+      D.appendChild div (SimpleDom.dom state.base);
       D.appendChild div input_box;
-      div##className <- Js.string "joolog_view_long";
+      div##className <- classname "show";
       display_block div (React.S.map (not) shown);
       div in
 
@@ -287,28 +283,28 @@ module DomExt = struct
       let title_dom = Dom_html.createA Dom_html.document in
       let _ = React.S.map (function
           | 0,0 ->
-            title_dom##innerHTML <- Js.string "";
-            title_dom##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level Lwt_log_core.Info));
+            title_dom##innerHTML <- Js.string "0";
+            title_dom##className <- classname_k Lwt_log_core.Info;
           | w,0 ->
             title_dom##innerHTML <- Js.string  (Printf.sprintf "%dw" w);
-            title_dom##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level Lwt_log_core.Warning));
+            title_dom##className <- classname_k Lwt_log_core.Warning;
           | w,e ->
             title_dom##innerHTML <- Js.string  (Printf.sprintf "%dw,%de" w e);
-            title_dom##className <- Js.string ("joolog_level_" ^ (Lwt_log_core.string_of_level Lwt_log_core.Error));
+            title_dom##className <- classname_k Lwt_log_core.Error;
         ) toread in
 
       title_dom##onclick <- Dom_html.handler (fun _ -> set_shown true; Js._true);
 
       let div = Dom_html.createDiv Dom_html.document in
       D.appendChild div title_dom;
-      div##className <- Js.string "joolog_view_short";
+      div##className <- classname "compact";
       display_block div shown;
       div
     in
 
     D.appendChild state.dom debug_container;
     D.appendChild state.dom debug_button;
-    state.dom##className <- Js.string "joolog_root";
+    state.dom##className <- classname "root";
 
     set_shown opened;
 
@@ -320,6 +316,6 @@ module DomExt = struct
         ~close:(fun _ -> Lwt.return_unit)
         ~output:(fun section level logs -> t.onlog section level logs; Lwt.return_unit)
     in
-    broadcast [logger;Dom.logger t.base]
+    broadcast [logger;SimpleDom.logger t.base]
 
 end

@@ -1,0 +1,82 @@
+.joolog_root {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background-color: rgb(75, 106, 185);
+  overflow: auto;
+  max-height: 80%;
+  border:solid 1px black;
+  border-radius: 6px;
+}
+.joolog_hide:before {
+  content:"hide";
+  margin-right: 5px;
+  float:right;
+}
+.joolog_clear:before {
+  margin-left: 5px;
+  content:"clear";
+}
+.joolog_compact a:before {
+  content:"show : ";
+  maring-right: 5px;
+  margin-left: 5px;
+}
+.joolog_expend {
+  max-width: 300px;
+  border: 1px solid #888;
+}
+
+.joolog_input {
+  width:100%;
+  border: 0px;
+  padding: 5px;
+  margin: 0px;
+}
+
+.joolog_input input[type=text]
+{
+  background-color: #BFBDBD;
+  border:solid 1px #BFBDBD;
+  color: #979797;
+  height: 28px;
+  padding-left:10px;
+  width: 191px;
+}
+
+.joolog_ul {
+  margin: 0px;
+  padding: 0px;
+  list-style-type: none;
+}
+.joolog_ul li {
+  padding: 2px 5px;
+}
+
+.joolog_ul li span {
+  padding-right: 5px;
+}
+
+.joolog_ul li:nth-child(2n) {
+  background-color:#E6E6E6;
+}
+
+.joolog_ul li:nth-child(2n+1) {
+  background-color:#C9C9C9;
+}
+
+.joolog_level_error,.joolog_level_fatal {
+  color : rgb(185, 27, 27);
+}
+
+.joolog_level_warning {
+  color : rgb(156, 156, 33);
+}
+
+.joolog_level_notice,.joolog_level_info {
+  color : rgb(35, 146, 0)
+}
+
+.joolog_level_debug {
+  color : black;
+}
