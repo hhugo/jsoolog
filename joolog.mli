@@ -7,12 +7,12 @@ include module type of Lwt_log_core
    and module Section = Lwt_log_core.Section
 
 module Console : sig
-  (** Log on the javascript console *)
+  (** Logger for the javascript console *)
   val logger : Lwt_log_core.logger
 end
 
 module SimpleDom : sig
-  (** Log on dom element *)
+  (** Logger into dom element *)
 
   (** Type of dom logger *)
   type t
@@ -32,7 +32,7 @@ module SimpleDom : sig
 end
 
 module Dom : sig
-  (** Log on dom element. Wrapper arround SimpleDom : compact/expand view, clear, input command *)
+  (** Logger into dom element. Wrapper arround SimpleDom : compact/expand view, clear, input command *)
 
   (** Type of dom logger *)
   type t

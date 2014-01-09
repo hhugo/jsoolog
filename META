@@ -1,6 +1,6 @@
 # OASIS_START
-# DO NOT EDIT (digest: 00c703a98a07b3dc4451cc00b5e0ac4f)
-version = "0.3"
+# DO NOT EDIT (digest: c49bc110d648a10bf23e7306e2533865)
+version = "0.4"
 description = "Logger for js_of_ocaml"
 requires = "lwt.log lwt.react js_of_ocaml lwt.syntax js_of_ocaml.syntax"
 archive(byte) = "joolog.cma"

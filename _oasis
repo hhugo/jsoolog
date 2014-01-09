@@ -1,13 +1,15 @@
-OASISFormat: 0.3
+OASISFormat: 0.4
 Name:        joolog
-Version:     0.3
+Version:     0.4
 Synopsis:    Logger for js_of_ocaml
 Description:
-  Joolog (Js_of_ocaml logger) is a library managing logs for
+  Joolog (Js_of_ocaml logger) is a library managing Lwt logger for
   application running in the browser.
 Authors:     Hugo Heuzard
+Maintainers: Hugo Heuzard <hugo.heuzard@gmail.com>
 License:     LGPL-2.1 with OCaml linking exception
-Plugins:     META (0.3)
+BuildTools: ocamlbuild
+Plugins:     META (0.4)
 Homepage: https://github.com/hhugo/joolog
 Library joolog
   Path:       ./
@@ -24,3 +26,10 @@ Executable test
   BuildDepends: joolog, lwt.log, lwt.react, js_of_ocaml, js_of_ocaml.syntax
   Install: false
   CompiledObject: byte
+
+Document api
+ Title:                API reference for Joolog
+ Type:                 OCamlbuild (0.4)
+ BuildTools+:          ocamldoc
+ XOCamlbuildPath:      ./
+ XOCamlbuildLibraries: joolog
