@@ -3,8 +3,5 @@
 _build
 *~
 *#*
-myocamlbuild.ml
-setup.*
-*.mllib
-*.odocl
-*.docdir
+setup.log
+setup.data

@@ -1,7 +1,7 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 0cc23d92fc3eab68c19a1a4debdcb185) *)
+(* DO NOT EDIT (digest: 599151c58d6c0be0628ff732e8134cef) *)
 
-This is the INSTALL file for the joolog distribution.
+This is the INSTALL file for the jsoolog distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
 full information.

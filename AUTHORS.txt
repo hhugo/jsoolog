@@ -1,11 +1,11 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 1a31b7e90f9052950c023bd57c1fefc1) *)
+(* DO NOT EDIT (digest: 0112a0410d27cacd203f72c3266bc1e9) *)
 
-Authors of joolog:
+Authors of jsoolog:
 
 * Hugo Heuzard
 
-Current maintainers of joolog:
+Current maintainers of jsoolog:
 
 * Hugo Heuzard <hugo.heuzard@gmail.com>
 
