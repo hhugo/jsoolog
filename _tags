@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 7b634b75601a0781f35a4596883ccb1c)
+# DO NOT EDIT (digest: 0f32ff307e83558cb869caf956df85f8)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -15,24 +15,24 @@
 "_darcs": not_hygienic
 # Library joolog
 "joolog.cmxs": use_joolog
-<*.ml{,i}>: pkg_lwt.log
-<*.ml{,i}>: pkg_lwt.react
 <*.ml{,i}>: pkg_js_of_ocaml
 <*.ml{,i}>: pkg_js_of_ocaml.syntax
+<*.ml{,i}>: pkg_lwt.log
+<*.ml{,i}>: pkg_lwt.react
 <*.ml{,i}>: pkg_lwt.syntax
 # Executable test
-"exemple/main.byte": use_joolog
-"exemple/main.byte": pkg_lwt.log
-"exemple/main.byte": pkg_lwt.react
 "exemple/main.byte": pkg_js_of_ocaml
 "exemple/main.byte": pkg_js_of_ocaml.syntax
+"exemple/main.byte": pkg_lwt.log
+"exemple/main.byte": pkg_lwt.react
 "exemple/main.byte": pkg_lwt.syntax
-<exemple/*.ml{,i}>: use_joolog
-<exemple/*.ml{,i}>: pkg_lwt.log
-<exemple/*.ml{,i}>: pkg_lwt.react
+"exemple/main.byte": use_joolog
 <exemple/*.ml{,i}>: pkg_js_of_ocaml
 <exemple/*.ml{,i}>: pkg_js_of_ocaml.syntax
+<exemple/*.ml{,i}>: pkg_lwt.log
+<exemple/*.ml{,i}>: pkg_lwt.react
 <exemple/*.ml{,i}>: pkg_lwt.syntax
+<exemple/*.ml{,i}>: use_joolog
 # OASIS_STOP
 
 <*.ml>:syntax_camlp4o

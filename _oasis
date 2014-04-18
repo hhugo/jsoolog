@@ -19,17 +19,22 @@ Library joolog
   Install: true
   CompiledObject: byte
 
-Executable test
-  Path: exemple
-  MainIs: main.ml
-  BuildTools: ocamlbuild
-  BuildDepends: joolog, lwt.log, lwt.react, js_of_ocaml, js_of_ocaml.syntax
-  Install: false
-  CompiledObject: byte
-
 Document api
  Title:                API reference for Joolog
  Type:                 OCamlbuild (0.4)
  BuildTools+:          ocamldoc
  XOCamlbuildPath:      ./
  XOCamlbuildLibraries: joolog
+
+Executable test
+  Path: exemple
+  MainIs: main.ml
+  BuildTools: ocamlbuild
+  Build$: flag(tests)
+  Install: false
+  BuildDepends: joolog, lwt.log, lwt.react, js_of_ocaml, js_of_ocaml.syntax
+  CompiledObject: byte
+
+Test tests
+  Run$: flag(tests)
+  Command: js_of_ocaml +weak.js $test
