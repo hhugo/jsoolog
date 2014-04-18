@@ -9,7 +9,7 @@ Authors:     Hugo Heuzard
 Maintainers: Hugo Heuzard <hugo.heuzard@gmail.com>
 License:     LGPL-2.1 with OCaml linking exception
 BuildTools: ocamlbuild
-Plugins:     META (0.4)
+Plugins:     StdFiles (0.4), META (0.4)
 Homepage: https://github.com/hhugo/joolog
 Library joolog
   Path:       ./
